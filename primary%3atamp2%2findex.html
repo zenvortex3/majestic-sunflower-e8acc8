@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TempMail Pro - Disposable Email & Anti Spam</title>
+    <meta name="description" content="Gunakan TempMail Pro untuk membuat alamat email sementara gratis. Lindungi privasi Anda, hindari spam, dan amankan kotak masuk utama Anda.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* === CSS Variables (LIGHT MODE DEFAULT) === */
+        :root {
+            --primary: #4F46E5; --primary-hover: #4338CA;
+            --surface: #FFFFFF; --background: #F3F4F6;
+            --text-main: #111827; --text-secondary: #4B5563; --text-muted: #6B7280;
+            --border: #E5E7EB; --success: #10B981; --danger: #EF4444; --warning: #F59E0B;
+            --bg-secondary: #F9FAFB; --bg-focus: #EEF2FF; --modal-overlay: rgba(17, 24, 39, 0.7);
+            --bg-otp: #ECFDF5; --border-otp: #A7F3D0; --text-otp: #065F46;
+            --bg-important: #FFFBEB; --border-important: #FDE68A; --text-important: #92400E;
+            --bg-sensitive: #FEF2F2; --border-sensitive: #FECACA; --text-sensitive: #991B1B;
+            --radius-md: 12px; --radius-lg: 16px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --glass-blur: blur(0px); /* Tanpa efek kaca di light mode */
+        }
+
+        /* === CSS Variables (DARK MODE PREMIUM GRADIENT) === */
+        [data-theme="dark"] {
+            --primary: #818CF8; --primary-hover: #A5B4FC;
+            /* Latar Belakang Gradasi Premium (Biru, Hijau, Ungu, Hitam) */
+            --background: 
+                radial-gradient(circle at top left, rgba(97, 43, 113, 0.45), transparent 45%),
+                radial-gradient(circle at top right, rgba(11, 83, 69, 0.35), transparent 45%),
+                radial-gradient(circle at bottom left, rgba(21, 67, 96, 0.45), transparent 45%),
+                radial-gradient(circle at bottom right, rgba(46, 22, 84, 0.35), transparent 40%),
+                #0B0F19; /* Warna dasar navy/hitam pekat */
+            
+            /* Efek Glassmorphism (Kaca) untuk Kartu */
+            --surface: rgba(26, 32, 53, 0.65); 
+            --glass-blur: blur(16px);
+            
+            --text-main: #F9FAFB; --text-secondary: #D1D5DB; --text-muted: #9CA3AF;
+            --border: rgba(255, 255, 255, 0.1); 
+            --bg-secondary: rgba(0, 0, 0, 0.2); --bg-focus: rgba(255, 255, 255, 0.05); 
+            --modal-overlay: rgba(0, 0, 0, 0.85);
+            
+            /* Warna Kategori Soft (Dark) */
+            --bg-otp: rgba(6, 78, 59, 0.5); --border-otp: #065F46; --text-otp: #34D399;
+            --bg-important: rgba(69, 26, 3, 0.5); --border-important: #78350F; --text-important: #FBBF24;
+            --bg-sensitive: rgba(69, 10, 10, 0.5); --border-sensitive: #7F1D1D; --text-sensitive: #F87171;
+            
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--background); 
+            background-attachment: fixed; /* Membuat gradasi tetap saat di-scroll */
+            color: var(--text-main); 
+            line-height: 1.6; display: flex; flex-direction: column; align-items: center; min-height: 100vh; 
+            transition: color 0.3s ease; 
+        }
+        
+        /* RTL Support for Arabic */
+        body[dir="rtl"] { text-align: right; }
+        body[dir="rtl"] .theme-toggle-btn { right: auto; left: 20px; }
+        body[dir="rtl"] .lang-toggle-btn { right: auto; left: 75px; }
+        body[dir="rtl"] .copy-btn-inside { right: auto; left: 10px; }
+        body[dir="rtl"] .email-input { padding: 20px 20px 20px 120px; }
+        body[dir="rtl"] .scroll-top-btn { right: auto; left: 30px; }
+        body[dir="rtl"] .provider-info { text-align: left; margin-left: 0; margin-right: auto;}
+        body[dir="rtl"] .badge { margin-right: 0; margin-left: 8px; }
+
+        /* === Typography & Layout === */
+        .header { text-align: center; padding: 50px 20px 20px; width: 100%; position: relative;}
+        .header h1 { font-size: 2.5rem; font-weight: 700; color: var(--primary); letter-spacing: -0.02em; transition: color 0.3s ease; }
+        .header p { color: var(--text-muted); margin-top: 8px; font-size: 1.1rem; }
+        .container { width: 100%; max-width: 850px; padding: 0 20px 40px; flex: 1; }
+        
+        /* Efek Glassmorphism diterapkan di sini */
+        .card { 
+            background: var(--surface); 
+            backdrop-filter: var(--glass-blur); 
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; 
+            transition: background 0.3s ease, box-shadow 0.3s ease, border 0.3s ease; 
+        }
+
+        /* === Top Buttons (Theme & Lang) === */
+        .top-btn { position: absolute; top: 20px; background: var(--surface); backdrop-filter: var(--glass-blur); border: 1px solid var(--border); color: var(--text-main); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); transition: all 0.3s ease; z-index: 100; }
+        .top-btn:hover { transform: scale(1.1); border-color: var(--primary); color: var(--primary); }
+        .theme-toggle-btn { right: 20px; }
+        .lang-toggle-btn { right: 75px; font-size: 1.2rem; }
+        
+        .icon-sun { display: none; } .icon-moon { display: block; }
+        [data-theme="dark"] .icon-sun { display: block; } [data-theme="dark"] .icon-moon { display: none; }
+
+        /* === Email Generator Section === */
+        .email-display-wrapper { position: relative; margin-bottom: 20px; }
+        .email-input { width: 100%; padding: 20px 120px 20px 20px; font-size: 1.25rem; font-weight: 600; color: var(--text-main); background: var(--bg-secondary); border: 2px dashed var(--primary); border-radius: var(--radius-md); text-align: center; outline: none; transition: all 0.3s ease; }
+        .email-input:focus { background: var(--bg-focus); }
+        .copy-btn-inside { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .copy-btn-inside:hover { background: var(--primary-hover); }
+
+        .action-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn { padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .btn-outline { background: var(--bg-secondary); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-outline:hover { background: var(--bg-focus); border-color: var(--text-muted); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #DC2626; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg-otp); color: var(--text-otp); border-radius: 20px; font-size: 0.85rem; font-weight: 500; margin-top: 16px; border: 1px solid var(--border-otp); transition: all 0.3s ease; }
+        .status-dot { width: 8px; height: 8px; background-color: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+        .provider-info { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; display: block; margin-top: 5px; text-align: right; font-weight: 500; }
+
+        /* === Inbox Section === */
+        .inbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .inbox-title { font-size: 1.25rem; font-weight: 600; }
+        .refresh-status { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        .message-list { display: flex; flex-direction: column; }
+        
+        .message-item { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr auto; gap: 16px; padding: 16px; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease; border-bottom: 1px solid var(--border); align-items: center; position: relative;}
+        .message-item:last-child { border-bottom: none; }
+        .message-item:hover { background: var(--bg-secondary); }
+
+        .message-item.row-otp { background: var(--bg-otp); border: 1px solid var(--border-otp); border-left: 4px solid var(--success); }
+        .message-item.row-important { background: var(--bg-important); border: 1px solid var(--border-important); border-left: 4px solid var(--warning); }
+        .message-item.row-sensitive { background: var(--bg-sensitive); border: 1px solid var(--border-sensitive); border-left: 4px solid var(--danger); }
+
+        .badge { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 12px; margin-right: 8px; vertical-align: middle; white-space: nowrap; }
+        .badge-otp { background: var(--bg-otp); color: var(--text-otp); border: 1px solid var(--border-otp); }
+        .badge-important { background: var(--bg-important); color: var(--text-important); border: 1px solid var(--border-important); }
+        .badge-sensitive { background: var(--bg-sensitive); color: var(--text-sensitive); border: 1px solid var(--border-sensitive); }
+
+        .msg-sender { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .msg-subject { color: var(--text-secondary); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
+        .msg-time-wrapper { display: flex; flex-direction: column; align-items: flex-end; gap: 4px;}
+        .msg-time { font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; }
+        
+        .auto-destruct-timer { font-size: 0.75rem; font-weight: 700; color: var(--danger); background: var(--bg-sensitive); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-sensitive); display: flex; align-items: center; gap: 4px;}
+        .timer-critical { animation: blink-red 1s infinite; background: var(--danger); color: white; border-color: var(--danger);}
+
+        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+
+        /* === Artikel & Content Section === */
+        .content-section { background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px; box-shadow: var(--shadow); margin-top: 40px; color: var(--text-secondary); transition: all 0.3s ease;}
+        .content-section h2 { color: var(--text-main); font-size: 1.75rem; margin-bottom: 16px; font-weight: 700; }
+        .content-section h3 { color: var(--text-main); font-size: 1.25rem; margin-top: 32px; margin-bottom: 12px; font-weight: 600; }
+        .content-section p { margin-bottom: 16px; font-size: 1rem; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-top: 32px; }
+        .feature-box { background: var(--bg-secondary); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border); transition: all 0.3s ease;}
+        .feature-icon { font-size: 2rem; margin-bottom: 12px; }
+        .feature-box h4 { color: var(--text-main); font-size: 1.1rem; margin-bottom: 8px; }
+        .feature-box p { font-size: 0.9rem; margin-bottom: 0; }
+
+        /* === Footer === */
+        .site-footer { background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); width: 100%; padding: 40px 20px; text-align: center; margin-top: 40px; font-family: 'Inter', sans-serif; border-top: 1px solid var(--border); transition: all 0.3s ease;}
+        .footer-logo { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 24px; letter-spacing: 0.5px; }
+        .footer-logo svg { width: 32px; height: 32px; color: var(--primary); }
+        .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-bottom: 24px; }
+        .footer-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.95rem; transition: all 0.2s ease; }
+        .footer-links a:hover { color: var(--primary); }
+        .footer-divider { border-top: 1px solid var(--border); margin: 0 auto 24px; max-width: 800px; }
+        .footer-copyright { font-size: 0.95rem; color: var(--text-muted); }
+
+        /* === Tombol Scroll === */
+        .scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background-color: var(--text-secondary); color: var(--background); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; box-shadow: var(--shadow); opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 999; }
+        .scroll-top-btn.visible { opacity: 1; visibility: visible; }
+        .scroll-top-btn:hover { background-color: var(--primary); transform: translateY(-3px); }
+
+        /* === Modals === */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-overlay); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; opacity: 0; transition: opacity 0.3s ease; }
+        .modal.show { display: flex; opacity: 1; }
+        .modal-content { background: var(--surface); backdrop-filter: var(--glass-blur); border: 1px solid var(--border); width: 100%; max-width: 800px; height: 85vh; border-radius: var(--radius-lg); display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); transform: translateY(20px); transition: all 0.3s ease; }
+        .modal-content.small { height: auto; max-width: 400px; padding: 30px 24px; text-align: center; display: block; }
+        .modal.show .modal-content { transform: translateY(0); }
+        
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; background: var(--bg-secondary); border-radius: var(--radius-lg) var(--radius-lg) 0 0; transition: all 0.3s ease; }
+        .modal-meta h2 { font-size: 1.25rem; margin-bottom: 4px; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
+        .modal-meta p { font-size: 0.9rem; color: var(--text-muted); }
+        .close-btn { background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; }
+        .close-btn:hover { background: var(--border); color: var(--text-main); }
+        
+        .modal-body { flex: 1; padding: 0; background: transparent; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; transition: background 0.3s;}
+        .modal-body iframe { width: 100%; flex: 1; border: none; background: transparent; }
+        
+        .smart-warning-banner { padding: 12px 20px; text-align: left; font-size: 0.9rem; font-weight: 500; display: none; width: 100%; border-bottom: 1px solid var(--border); transition: all 0.3s ease;}
+        .smart-warning-banner.show { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        
+        .otp-extractor { background: var(--bg-otp); border-bottom: 1px solid var(--border-otp); padding: 15px 24px; display: none; justify-content: space-between; align-items: center; transition: all 0.3s ease;}
+        .otp-extractor.show { display: flex; }
+        .otp-text { font-size: 1.1rem; color: var(--text-otp); font-weight: 500; }
+        .otp-code { font-size: 1.5rem; font-weight: 700; color: var(--success); letter-spacing: 2px; margin-left: 8px; font-family: monospace; background: var(--bg-secondary); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border-otp);}
+
+        .domain-list-container { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; margin-top: 16px; padding-right: 6px; }
+        .domain-btn { background: var(--bg-secondary); border: 1px solid var(--border); padding: 14px 16px; border-radius: 8px; text-align: left; font-weight: 500; font-size: 1rem; cursor: pointer; transition: all 0.2s; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        .domain-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        /* Grid Bahasa */
+        .lang-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; max-height: 350px; overflow-y: auto;}
+        .lang-btn { background: var(--bg-secondary); border: 1px solid var(--border); padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 500; color: var(--text-main); transition: 0.2s; text-align: center;}
+        .lang-btn:hover, .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1F2937; color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.95rem; font-weight: 500; opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 2000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes blink-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        @media (max-width: 640px) {
+            .header h1 { font-size: 2rem; }
+            .top-btn { top: 15px; width: 38px; height: 38px; }
+            .theme-toggle-btn { right: 15px; } .lang-toggle-btn { right: 65px; }
+            body[dir="rtl"] .theme-toggle-btn { left: 15px; right: auto;} body[dir="rtl"] .lang-toggle-btn { left: 65px; right: auto;}
+            .email-input { font-size: 1rem; padding: 16px 100px 16px 16px; }
+            .copy-btn-inside { padding: 8px 12px; font-size: 0.9rem; right: 8px; }
+            .message-item { grid-template-columns: 1fr; gap: 8px; align-items: start;}
+            .msg-time { display: none; }
+            .inbox-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .content-section { padding: 24px; }
+            .scroll-top-btn { bottom: 20px; right: 20px; }
+            .otp-extractor { flex-direction: column; gap: 10px; text-align: center; }
+            .msg-time-wrapper { align-items: flex-start; margin-top: 8px; grid-column: 1 / -1; }
+        }
+    </style>
+</head>
+<body>
+
+    <button id="theme-toggle" class="top-btn theme-toggle-btn" aria-label="Toggle Dark Mode">
+        <svg class="icon-sun" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        <svg class="icon-moon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    </button>
+    <button id="lang-toggle" class="top-btn lang-toggle-btn" aria-label="Change Language" onclick="showLangModal()">🌐</button>
+
+    <div class="header">
+        <h1>TempMail Pro</h1>
+        <p data-i18n="tagline">Layanan email sementara gratis untuk menghindari spam.</p>
+    </div>
+
+    <div class="container">
+        <div class="card" style="text-align: center;">
+            <div class="email-display-wrapper">
+                <input type="text" id="email-address" class="email-input" readonly value="Menginisialisasi email...">
+                <button class="copy-btn-inside" onclick="copyEmail()" data-i18n="btn_copy">Salin</button>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-outline" style="color: var(--danger); border-color: var(--danger);" onclick="showConfirmModal()">
+                    <span data-i18n="btn_delete">🗑️ Hapus Permanen & Ganti</span>
+                </button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                <div id="system-status" class="status-badge" style="display: none; margin-top: 0;">
+                    <div class="status-dot"></div>
+                    <span id="status-text" data-i18n="status_active">Email aktif</span>
+                </div>
+                <div id="provider-label" class="provider-info" data-i18n="status_connecting">Server: Menghubungkan...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="inbox-header">
+                <div class="inbox-title" data-i18n="inbox_title">Kotak Masuk</div>
+                <div class="refresh-status">
+                    <span id="refresh-indicator" style="display: none;" class="loader"></span>
+                    <span id="countdown-text">Otomatis refresh dalam 5d</span>
+                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;" onclick="fetchMessages(true)" data-i18n="btn_refresh">
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="message-list" id="inbox-list">
+                <div class="empty-state">
+                    <div class="empty-icon">📥</div>
+                    <p data-i18n="empty_inbox">Memeriksa pesan baru...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h2 data-i18n="article_h2">Apa itu TempMail Pro?</h2>
+            <p><strong data-i18n="article_p1_strong">TempMail Pro</strong> <span data-i18n="article_p1">adalah layanan alamat email sementara yang memungkinkan Anda menerima pesan tanpa mengungkapkan identitas asli.</span></p>
+            
+            <div class="features-grid">
+                <div class="feature-box">
+                    <div class="feature-icon">⏱️</div>
+                    <h4 data-i18n="feat1_h4">Auto-Destruct 5 Menit</h4>
+                    <p data-i18n="feat1_p">Khusus email OTP dan Sensitif, sistem otomatis menghapus email secara permanen dalam 5 menit.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">🤖</div>
+                    <h4 data-i18n="feat2_h4">Smart OTP Extractor</h4>
+                    <p data-i18n="feat2_p">Mendeteksi dan menyorot kode OTP otomatis sehingga bisa disalin dengan 1 klik.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">⚡</div>
+                    <h4 data-i18n="feat3_h4">Dual Engine API</h4>
+                    <p data-i18n="feat3_p">Menggunakan server ganda bergantian dengan fitur Pemilih Domain Khusus.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">✨</div>
+                    <h4 data-i18n="feat4_h4">Premium Dark Mode</h4>
+                    <p data-i18n="feat4_p">Desain antarmuka Glassmorphism mewah yang otomatis menyesuaikan preferensi mata Anda.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-logo">
+            <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
+            TEMPMAIL PRO
+        </div>
+        <div class="footer-links">
+            <a href="#" data-i18n="foot_about">About Us</a>
+            <a href="#" data-i18n="foot_contact">Contact Us</a>
+            <a href="#" data-i18n="foot_privacy">Privacy</a>
+            <a href="#" data-i18n="foot_terms">Terms</a>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-copyright">
+            TempMail Pro &copy; 2026 – <span data-i18n="foot_rights">All Rights Reserved</span>
+        </div>
+    </footer>
+
+    <button class="scroll-top-btn" id="scrollTopBtn" onclick="scrollToTop()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+    </button>
+
+    <div class="modal" id="email-modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modal-header-box">
+                <div class="modal-meta">
+                    <h2 id="modal-subject">Subjek</h2>
+                    <p id="modal-sender">pengirim@example.com</p>
+                </div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="smart-warning" class="smart-warning-banner">
+                    <div>
+                        <span id="smart-warning-icon">⚠️</span>
+                        <span id="smart-warning-text">Peringatan</span>
+                    </div>
+                    <div id="modal-auto-destruct" class="auto-destruct-timer" style="display:none; margin:0;">⏳ --:--</div>
+                </div>
+                
+                <div id="otp-extractor" class="otp-extractor">
+                    <div class="otp-text"><span data-i18n="detected_otp">Terdeteksi Kode OTP:</span> <span id="detected-otp" class="otp-code">123456</span></div>
+                    <button class="btn btn-primary" onclick="copyExtractedOTP()" style="padding: 8px 16px; font-size: 0.9rem;"><span data-i18n="btn_copy_otp">📋 Salin OTP</span></button>
+                </div>
+                <iframe id="email-content" sandbox="allow-same-origin allow-popups"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content small">
+            <h2 style="color: var(--danger); margin-bottom: 12px;" data-i18n="modal_del_title">⚠️ Hapus Permanen?</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5;" data-i18n="modal_del_desc">
+                Tindakan ini akan menghapus akun dan seluruh pesan Anda saat ini dari server. Sistem akan menggantinya dengan email baru yang segar. Anda yakin?
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="btn btn-outline" onclick="closeConfirmModal()" data-i18n="btn_cancel">Batal</button>
+                <button class="btn btn-danger" onclick="executeDeleteAccount()" data-i18n="btn_yes_delete">Ya, Hapus!</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="domain-modal">
+        <div class="modal-content small" style="text-align: left;">
+            <h2 style="color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <span>🌐</span> <span data-i18n="modal_dom_title">Pilih Domain</span>
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.95rem;">
+                <span data-i18n="modal_dom_desc">Server menyediakan beberapa opsi domain. Silakan pilih:</span> (<b id="dm-provider-name">Mail.gw</b>)
+            </p>
+            <div id="domain-list" class="domain-list-container"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="lang-modal">
+        <div class="modal-content small" style="text-align: left;">
+            <h2 style="color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <span>🌐</span> Select Language
+            </h2>
+            <div class="lang-grid">
+                <button class="lang-btn" onclick="changeLang('id')">🇮🇩 Indonesia</button>
+                <button class="lang-btn" onclick="changeLang('en')">🇬🇧 English</button>
+                <button class="lang-btn" onclick="changeLang('es')">🇪🇸 Español</button>
+                <button class="lang-btn" onclick="changeLang('fr')">🇫🇷 Français</button>
+                <button class="lang-btn" onclick="changeLang('de')">🇩🇪 Deutsch</button>
+                <button class="lang-btn" onclick="changeLang('ja')">🇯🇵 日本語</button>
+                <button class="lang-btn" onclick="changeLang('ko')">🇰🇷 한국어</button>
+                <button class="lang-btn" onclick="changeLang('zh')">🇨🇳 中文</button>
+                <button class="lang-btn" onclick="changeLang('ru')">🇷🇺 Русский</button>
+                <button class="lang-btn" onclick="changeLang('ar')">🇸🇦 العربية</button>
+                <button class="lang-btn" onclick="changeLang('pt')">🇵🇹 Português</button>
+                <button class="lang-btn" onclick="changeLang('hi')">🇮🇳 हिन्दी</button>
+                <button class="lang-btn" onclick="changeLang('it')">🇮🇹 Italiano</button>
+                <button class="lang-btn" onclick="changeLang('tr')">🇹🇷 Türkçe</button>
+            </div>
+            <button class="btn btn-outline" style="width: 100%; margin-top: 16px;" onclick="closeLangModal()" data-i18n="btn_cancel">Batal</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">✅ Disalin!</div>
+
+    <script>
+        // === TRANSLATION DICTIONARY (14 Languages) ===
+        const i18n = {
+            id: {
+                tagline: "Layanan email sementara gratis untuk menghindari spam.", btn_copy: "Salin", btn_delete: "🗑️ Hapus Permanen & Ganti",
+                status_active: "Email aktif", status_connecting: "Server: Menghubungkan...", inbox_title: "Kotak Masuk", btn_refresh: "Refresh",
+                empty_inbox: "Kotak masuk Anda kosong. Menunggu email masuk...",
+                article_h2: "Apa itu TempMail Pro?", article_p1_strong: "TempMail Pro", article_p1: "adalah layanan alamat email sementara yang memungkinkan Anda menerima pesan tanpa mengungkapkan identitas asli.",
+                feat1_h4: "Auto-Destruct 5 Menit", feat1_p: "Khusus email OTP dan Sensitif, sistem otomatis menghapus email secara permanen dalam 5 menit.",
+                feat2_h4: "Smart OTP Extractor", feat2_p: "Mendeteksi dan menyorot kode OTP otomatis sehingga bisa disalin dengan 1 klik.",
+                feat3_h4: "Dual Engine API", feat3_p: "Menggunakan server ganda bergantian dengan fitur Pemilih Domain Khusus.",
+                feat4_h4: "Premium Dark Mode", feat4_p: "Desain antarmuka Glassmorphism mewah yang otomatis menyesuaikan preferensi mata Anda.",
+                foot_about: "Tentang Kami", foot_contact: "Kontak", foot_privacy: "Privasi", foot_terms: "Syarat & Ketentuan", foot_rights: "Hak Cipta Dilindungi",
+                detected_otp: "Terdeteksi Kode OTP:", btn_copy_otp: "📋 Salin OTP", modal_del_title: "⚠️ Hapus Permanen?", modal_del_desc: "Tindakan ini akan menghapus akun dan seluruh pesan Anda dari server. Yakin?",
+                btn_cancel: "Batal", btn_yes_delete: "Ya, Hapus!", modal_dom_title: "Pilih Domain", modal_dom_desc: "Pilih ekstensi domain yang Anda inginkan:",
+                toast_copy_mail: "✅ Alamat email disalin!", toast_copy_otp: "🔐 Kode OTP disalin!", toast_del_done: "🗑️ Email lama dihapus!", toast_destruct: "💥 Email otomatis dihancurkan.",
+                refresh_in: "Otomatis refresh dalam {n}d", pause_refresh: "Menjeda refresh...", loading_msg: "Memuat pesan...", empty_msg: "Email kosong.",
+                warn_sens: "Peringatan: Email sensitif. Akan dihapus otomatis.", warn_otp: "Peringatan: Jangan bagikan kode OTP Anda.", warn_imp: "Peringatan: Pastikan info ini aman.",
+                lbl_sens: "Sensitif", lbl_otp: "OTP", lbl_imp: "Penting", no_subject: "(Tidak ada subjek)", from: "Dari:", time_burn: "Hangus:", time_del: "💥 Menghapus..."
+            },
+            en: {
+                tagline: "Free temporary email service to avoid spam.", btn_copy: "Copy", btn_delete: "🗑️ Delete & Replace",
+                status_active: "Email active", status_connecting: "Server: Connecting...", inbox_title: "Inbox", btn_refresh: "Refresh",
+                empty_inbox: "Your inbox is empty. Waiting for emails...",
+                article_h2: "What is TempMail Pro?", article_p1_strong: "TempMail Pro", article_p1: "is a disposable email service that allows you to receive messages without revealing your true identity.",
+                feat1_h4: "5-Min Auto-Destruct", feat1_p: "For OTP and Sensitive emails, the system will permanently delete the email in 5 minutes.",
+                feat2_h4: "Smart OTP Extractor", feat2_p: "Automatically detects and highlights OTP codes for 1-click copying.",
+                feat3_h4: "Dual Engine API", feat3_p: "Uses dual servers with a Custom Domain Selector feature.",
+                feat4_h4: "Premium Dark Mode", feat4_p: "Luxurious Glassmorphism interface that automatically adapts to your eye preferences.",
+                foot_about: "About Us", foot_contact: "Contact Us", foot_privacy: "Privacy", foot_terms: "Terms", foot_rights: "All Rights Reserved",
+                detected_otp: "OTP Detected:", btn_copy_otp: "📋 Copy OTP", modal_del_title: "⚠️ Delete Permanently?", modal_del_desc: "This will delete your account and all messages. Are you sure?",
+                btn_cancel: "Cancel", btn_yes_delete: "Yes, Delete!", modal_dom_title: "Select Domain", modal_dom_desc: "Please choose your preferred domain extension:",
+                toast_copy_mail: "✅ Email copied!", toast_copy_otp: "🔐 OTP copied!", toast_del_done: "🗑️ Old email deleted!", toast_destruct: "💥 Email auto-destroyed.",
+                refresh_in: "Auto-refresh in {n}s", pause_refresh: "Pausing refresh...", loading_msg: "Loading message...", empty_msg: "Empty email.",
+                warn_sens: "Warning: Sensitive email. Auto-deleting soon.", warn_otp: "Warning: Never share your OTP.", warn_imp: "Warning: Keep this info safe.",
+                lbl_sens: "Sensitive", lbl_otp: "OTP", lbl_imp: "Important", no_subject: "(No subject)", from: "From:", time_burn: "Burns in:", time_del: "💥 Deleting..."
+            },
+            es: { tagline: "Correo temporal gratuito para evitar spam.", btn_copy: "Copiar", btn_delete: "🗑️ Borrar y Reemplazar", status_active: "Correo activo", status_connecting: "Conectando...", inbox_title: "Bandeja de entrada", btn_refresh: "Actualizar", empty_inbox: "Bandeja vacía. Esperando correos...", article_h2: "¿Qué es TempMail Pro?", article_p1_strong: "TempMail Pro", article_p1: "es un servicio de correo desechable que protege tu identidad.", feat1_h4: "Auto-Destrucción 5 Min", feat1_p: "Correos OTP y sensibles se borran en 5 min.", feat2_h4: "Extractor de OTP", feat2_p: "Detecta y copia códigos OTP con 1 clic.", feat3_h4: "Dual Engine API", feat3_p: "Usa servidores duales con selección de dominio.", feat4_h4: "Modo Oscuro Premium", feat4_p: "Interfaz de cristalmorfismo de lujo que se adapta a ti.", foot_about: "Nosotros", foot_contact: "Contacto", foot_privacy: "Privacidad", foot_terms: "Términos", foot_rights: "Derechos Reservados", detected_otp: "OTP Detectado:", btn_copy_otp: "📋 Copiar OTP", modal_del_title: "⚠️ ¿Borrar permanentemente?", modal_del_desc: "Esto borrará tu cuenta y mensajes. ¿Seguro?", btn_cancel: "Cancelar", btn_yes_delete: "Sí, Borrar", modal_dom_title: "Elegir Dominio", modal_dom_desc: "Elige una extensión de dominio:", toast_copy_mail: "✅ Correo copiado", toast_copy_otp: "🔐 OTP copiado", toast_del_done: "🗑️ Correo borrado.", toast_destruct: "💥 Correo auto-destruido.", refresh_in: "Actualiza en {n}s", pause_refresh: "Pausado...", loading_msg: "Cargando...", empty_msg: "Correo vacío.", warn_sens: "Aviso: Correo sensible. Se borrará pronto.", warn_otp: "Aviso: Nunca compartas tu OTP.", warn_imp: "Aviso: Mantén esto seguro.", lbl_sens: "Sensible", lbl_otp: "OTP", lbl_imp: "Importante", no_subject: "(Sin asunto)", from: "De:", time_burn: "Expira:", time_del: "💥 Borrando..." },
+            fr: { tagline: "Email temporaire gratuit anti-spam.", btn_copy: "Copier", btn_delete: "🗑️ Supprimer", status_active: "Email actif", status_connecting: "Connexion...", inbox_title: "Boîte de réception", btn_refresh: "Actualiser", empty_inbox: "Boîte vide. En attente...", article_h2: "C'est quoi TempMail Pro?", article_p1_strong: "TempMail Pro", article_p1: "est un service d'email jetable pour protéger votre identité.", feat1_h4: "Auto-Destruction 5 Min", feat1_p: "Les emails sensibles sont supprimés en 5 min.", feat2_h4: "Extracteur OTP", feat2_p: "Copiez les codes OTP en 1 clic.", feat3_h4: "API Double", feat3_p: "Serveurs doubles avec sélection de domaine.", feat4_h4: "Mode Sombre Premium", feat4_p: "Interface Glassmorphism luxueuse.", foot_about: "À Propos", foot_contact: "Contact", foot_privacy: "Confidentialité", foot_terms: "Conditions", foot_rights: "Droits Réservés", detected_otp: "OTP Détecté:", btn_copy_otp: "📋 Copier OTP", modal_del_title: "⚠️ Supprimer?", modal_del_desc: "Ceci supprimera votre compte et vos messages.", btn_cancel: "Annuler", btn_yes_delete: "Oui, Supprimer", modal_dom_title: "Choisir un domaine", modal_dom_desc: "Choisissez une extension de domaine:", toast_copy_mail: "✅ Email copié", toast_copy_otp: "🔐 OTP copié", toast_del_done: "🗑️ Email supprimé.", toast_destruct: "💥 Email auto-détruit.", refresh_in: "Actualise dans {n}s", pause_refresh: "Pause...", loading_msg: "Chargement...", empty_msg: "Email vide.", warn_sens: "Alerte: Email sensible. Auto-suppression.", warn_otp: "Alerte: Ne partagez pas votre OTP.", warn_imp: "Alerte: Gardez ceci secret.", lbl_sens: "Sensible", lbl_otp: "OTP", lbl_imp: "Important", no_subject: "(Sans objet)", from: "De:", time_burn: "Expire:", time_del: "💥 Suppression..." },
+            de: { tagline: "Kostenlose temporäre E-Mail gegen Spam.", btn_copy: "Kopieren", btn_delete: "🗑️ Löschen & Ersetzen", status_active: "E-Mail aktiv", status_connecting: "Verbinde...", inbox_title: "Posteingang", btn_refresh: "Aktualisieren", empty_inbox: "Posteingang leer. Warte auf E-Mails...", article_h2: "Was ist TempMail Pro?", article_p1_strong: "TempMail Pro", article_p1: "ist ein Einweg-E-Mail-Dienst zum Schutz Ihrer Identität.", feat1_h4: "5-Min Auto-Destruct", feat1_p: "Sensible E-Mails werden in 5 Minuten gelöscht.", feat2_h4: "Smart OTP Extraktor", feat2_p: "OTP-Codes mit 1 Klick kopieren.", feat3_h4: "Dual Engine API", feat3_p: "Zwei Server mit Domainauswahl.", feat4_h4: "Premium Dark Mode", feat4_p: "Luxuriöses Glassmorphism-Design.", foot_about: "Über uns", foot_contact: "Kontakt", foot_privacy: "Datenschutz", foot_terms: "Bedingungen", foot_rights: "Alle Rechte vorbehalten", detected_otp: "OTP Erkannt:", btn_copy_otp: "📋 OTP Kopieren", modal_del_title: "⚠️ Dauerhaft löschen?", modal_del_desc: "Dies löscht Ihr Konto und alle Nachrichten.", btn_cancel: "Abbrechen", btn_yes_delete: "Ja, Löschen", modal_dom_title: "Domain wählen", modal_dom_desc: "Wählen Sie eine Domainendung:", toast_copy_mail: "✅ E-Mail kopiert", toast_copy_otp: "🔐 OTP kopiert", toast_del_done: "🗑️ E-Mail gelöscht.", toast_destruct: "💥 E-Mail auto-zerstört.", refresh_in: "Aktualisiert in {n}s", pause_refresh: "Pausiert...", loading_msg: "Lade...", empty_msg: "Leere E-Mail.", warn_sens: "Warnung: Sensible E-Mail.", warn_otp: "Warnung: OTP nie teilen.", warn_imp: "Warnung: Wichtige Info.", lbl_sens: "Sensibel", lbl_otp: "OTP", lbl_imp: "Wichtig", no_subject: "(Kein Betreff)", from: "Von:", time_burn: "Verfällt:", time_del: "💥 Lösche..." },
+            ja: { tagline: "スパムを回避する無料の使い捨てメール。", btn_copy: "コピー", btn_delete: "🗑️ 削除して変更", status_active: "メール有効", status_connecting: "接続中...", inbox_title: "受信トレイ", btn_refresh: "更新", empty_inbox: "受信トレイは空です。メールを待っています...", article_h2: "TempMail Proとは？", article_p1_strong: "TempMail Pro", article_p1: "は、身元を明かさずにメッセージを受信できる使い捨てメールサービスです。", feat1_h4: "5分で自動破棄", feat1_p: "OTPおよび機密メールは5分で自動削除されます。", feat2_h4: "スマートOTP抽出", feat2_p: "OTPコードを自動検出し、1クリックでコピー。", feat3_h4: "デュアルエンジンAPI", feat3_p: "カスタムドメインセレクタを備えたデュアルサーバー。", feat4_h4: "プレミアムダークモード", feat4_p: "豪華なグラスモーフィズムデザイン。", foot_about: "会社概要", foot_contact: "連絡先", foot_privacy: "プライバシー", foot_terms: "利用規約", foot_rights: "無断転載禁止", detected_otp: "OTPを検出：", btn_copy_otp: "📋 OTPをコピー", modal_del_title: "⚠️ 完全に削除しますか？", modal_del_desc: "アカウントとすべてのメッセージが削除されます。", btn_cancel: "キャンセル", btn_yes_delete: "はい、削除します", modal_dom_title: "ドメインを選択", modal_dom_desc: "希望のドメインを選択してください：", toast_copy_mail: "✅ メールをコピーしました！", toast_copy_otp: "🔐 OTPをコピー！", toast_del_done: "🗑️ メールを削除！", toast_destruct: "💥 メールは自動破棄されました。", refresh_in: "{n}秒後に更新", pause_refresh: "一時停止...", loading_msg: "読み込み中...", empty_msg: "空のメール。", warn_sens: "警告：機密メール。間もなく削除されます。", warn_otp: "警告：OTPを絶対に共有しないでください。", warn_imp: "警告：情報を安全に保管。", lbl_sens: "機密", lbl_otp: "OTP", lbl_imp: "重要", no_subject: "(件名なし)", from: "送信者:", time_burn: "破棄まで:", time_del: "💥 削除中..." },
+            ko: { tagline: "스팸 방지를 위한 무료 임시 이메일.", btn_copy: "복사", btn_delete: "🗑️ 영구 삭제 및 교체", status_active: "이메일 활성", status_connecting: "서버 연결 중...", inbox_title: "받은 편지함", btn_refresh: "새로고침", empty_inbox: "받은 편지함이 비어 있습니다.", article_h2: "TempMail Pro란?", article_p1_strong: "TempMail Pro", article_p1: "는 신원을 밝히지 않고 메시지를 받을 수 있는 일회용 이메일 서비스입니다.", feat1_h4: "5분 자동 파기", feat1_p: "OTP 및 민감한 이메일은 5분 안에 삭제됩니다.", feat2_h4: "스마트 OTP 추출", feat2_p: "OTP 코드를 자동으로 감지하고 복사합니다.", feat3_h4: "듀얼 엔진 API", feat3_p: "도메인 선택기가 있는 듀얼 서버를 사용합니다.", feat4_h4: "프리미엄 다크 모드", feat4_p: "고급스러운 글래스모피즘 디자인.", foot_about: "회사 소개", foot_contact: "연락처", foot_privacy: "개인정보 보호", foot_terms: "이용 약관", foot_rights: "모든 권리 보유", detected_otp: "OTP 감지됨:", btn_copy_otp: "📋 OTP 복사", modal_del_title: "⚠️ 영구 삭제하시겠습니까?", modal_del_desc: "계정과 모든 메시지가 삭제됩니다.", btn_cancel: "취소", btn_yes_delete: "예, 삭제합니다!", modal_dom_title: "도메인 선택", modal_dom_desc: "원하는 도메인을 선택하세요:", toast_copy_mail: "✅ 이메일 복사됨!", toast_copy_otp: "🔐 OTP 복사됨!", toast_del_done: "🗑️ 삭제 완료!", toast_destruct: "💥 이메일 자동 파기됨.", refresh_in: "{n}초 후 새로고침", pause_refresh: "일시 정지...", loading_msg: "로딩 중...", empty_msg: "빈 이메일.", warn_sens: "경고: 민감한 이메일.", warn_otp: "경고: OTP를 공유하지 마세요.", warn_imp: "경고: 정보를 안전하게 보관하세요.", lbl_sens: "민감함", lbl_otp: "OTP", lbl_imp: "중요", no_subject: "(제목 없음)", from: "보낸 사람:", time_burn: "파기까지:", time_del: "💥 삭제 중..." },
+            zh: { tagline: "避免垃圾邮件的免费临时邮箱。", btn_copy: "复制", btn_delete: "🗑️ 永久删除并更换", status_active: "邮箱激活", status_connecting: "连接中...", inbox_title: "收件箱", btn_refresh: "刷新", empty_inbox: "收件箱为空。等待邮件...", article_h2: "什么是 TempMail Pro？", article_p1_strong: "TempMail Pro", article_p1: "是一种一次性电子邮件服务，保护您的隐私。", feat1_h4: "5分钟自动销毁", feat1_p: "OTP 和敏感邮件将在 5 分钟内删除。", feat2_h4: "智能 OTP 提取", feat2_p: "自动检测并一键复制 OTP。", feat3_h4: "双引擎 API", feat3_p: "使用双服务器和域名选择器。", feat4_h4: "高级深色模式", feat4_p: "豪华的毛玻璃透明设计。", foot_about: "关于我们", foot_contact: "联系我们", foot_privacy: "隐私政策", foot_terms: "服务条款", foot_rights: "版权所有", detected_otp: "检测到 OTP:", btn_copy_otp: "📋 复制 OTP", modal_del_title: "⚠️ 确认永久删除？", modal_del_desc: "这将删除您的帐户和所有消息。", btn_cancel: "取消", btn_yes_delete: "是的，删除", modal_dom_title: "选择域名", modal_dom_desc: "请选择一个域名：", toast_copy_mail: "✅ 邮箱已复制！", toast_copy_otp: "🔐 OTP 已复制！", toast_del_done: "🗑️ 已删除旧邮箱！", toast_destruct: "💥 邮件已自动销毁。", refresh_in: "{n}秒后刷新", pause_refresh: "暂停...", loading_msg: "加载中...", empty_msg: "空邮件。", warn_sens: "警告：敏感邮件，即将删除。", warn_otp: "警告：切勿分享您的 OTP。", warn_imp: "警告：请妥善保管。", lbl_sens: "敏感", lbl_otp: "OTP", lbl_imp: "重要", no_subject: "(无主题)", from: "发件人:", time_burn: "销毁倒计时:", time_del: "💥 删除中..." },
+            ru: { tagline: "Бесплатная временная почта от спама.", btn_copy: "Копировать", btn_delete: "🗑️ Удалить и заменить", status_active: "Почта активна", status_connecting: "Подключение...", inbox_title: "Входящие", btn_refresh: "Обновить", empty_inbox: "Папка пуста. Ожидание писем...", article_h2: "Что такое TempMail Pro?", article_p1_strong: "TempMail Pro", article_p1: "- это сервис одноразовой почты для защиты вашей личности.", feat1_h4: "Удаление через 5 мин", feat1_p: "Письма с OTP и конфиденциальные удаляются через 5 мин.", feat2_h4: "Умный OTP-экстрактор", feat2_p: "Копируйте OTP в 1 клик.", feat3_h4: "Двойной API", feat3_p: "Два сервера и выбор домена.", feat4_h4: "Премиум Темный Режим", feat4_p: "Роскошный дизайн Glassmorphism.", foot_about: "О нас", foot_contact: "Контакты", foot_privacy: "Конфиденциальность", foot_terms: "Условия", foot_rights: "Все права защищены", detected_otp: "Обнаружен OTP:", btn_copy_otp: "📋 Копировать OTP", modal_del_title: "⚠️ Удалить навсегда?", modal_del_desc: "Это удалит ваш аккаунт и сообщения.", btn_cancel: "Отмена", btn_yes_delete: "Да, удалить", modal_dom_title: "Выберите домен", modal_dom_desc: "Выберите доменное расширение:", toast_copy_mail: "✅ Почта скопирована!", toast_copy_otp: "🔐 OTP скопирован!", toast_del_done: "🗑️ Почта удалена!", toast_destruct: "💥 Письмо уничтожено.", refresh_in: "Обновление через {n}с", pause_refresh: "Пауза...", loading_msg: "Загрузка...", empty_msg: "Пустое письмо.", warn_sens: "Внимание: Конфиденциально.", warn_otp: "Внимание: Не делитесь OTP.", warn_imp: "Внимание: Важная инфо.", lbl_sens: "Секретно", lbl_otp: "OTP", lbl_imp: "Важно", no_subject: "(Без темы)", from: "От:", time_burn: "Уничтожение:", time_del: "💥 Удаление..." },
+            ar: { tagline: "بريد إلكتروني مؤقت لتجنب البريد العشوائي.", btn_copy: "نسخ", btn_delete: "🗑️ حذف دائم واستبدال", status_active: "البريد نشط", status_connecting: "جاري الاتصال...", inbox_title: "صندوق الوارد", btn_refresh: "تحديث", empty_inbox: "صندوق الوارد فارغ. بانتظار الرسائل...", article_h2: "ما هو TempMail Pro؟", article_p1_strong: "TempMail Pro", article_p1: "هو خدمة بريد إلكتروني يمكن التخلص منها لحماية هويتك.", feat1_h4: "تدمير ذاتي (5 دقائق)", feat1_p: "يتم حذف رسائل OTP الحساسة في 5 دقائق.", feat2_h4: "مستخرج OTP", feat2_p: "يكتشف وينسخ رموز OTP بنقرة واحدة.", feat3_h4: "واجهة برمجة مزدوجة", feat3_p: "خوادم مزدوجة مع اختيار النطاق.", feat4_h4: "الوضع الداكن الفاخر", feat4_p: "تصميم زجاجي (Glassmorphism) مذهل.", foot_about: "معلومات عنا", foot_contact: "اتصل بنا", foot_privacy: "الخصوصية", foot_terms: "الشروط", foot_rights: "جميع الحقوق محفوظة", detected_otp: "تم اكتشاف OTP:", btn_copy_otp: "📋 نسخ OTP", modal_del_title: "⚠️ حذف نهائي؟", modal_del_desc: "سيؤدي هذا إلى حذف حسابك ورسائلك.", btn_cancel: "إلغاء", btn_yes_delete: "نعم، احذف", modal_dom_title: "اختر النطاق", modal_dom_desc: "اختر امتداد النطاق المفضل:", toast_copy_mail: "✅ تم نسخ البريد!", toast_copy_otp: "🔐 تم نسخ OTP!", toast_del_done: "🗑️ تم الحذف!", toast_destruct: "💥 تم تدمير الرسالة.", refresh_in: "تحديث خلال {n}ث", pause_refresh: "إيقاف مؤقت...", loading_msg: "جاري التحميل...", empty_msg: "رسالة فارغة.", warn_sens: "تحذير: رسالة حساسة.", warn_otp: "تحذير: لا تشارك رمز OTP.", warn_imp: "تحذير: معلومات مهمة.", lbl_sens: "حساس", lbl_otp: "OTP", lbl_imp: "مهم", no_subject: "(بدون موضوع)", from: "من:", time_burn: "تدمير في:", time_del: "💥 جاري الحذف..." },
+            pt: { tagline: "E-mail temporário gratuito contra spam.", btn_copy: "Copiar", btn_delete: "🗑️ Excluir e Substituir", status_active: "E-mail ativo", status_connecting: "Conectando...", inbox_title: "Caixa de Entrada", btn_refresh: "Atualizar", empty_inbox: "Caixa vazia. Aguardando e-mails...", article_h2: "O que é TempMail Pro?", article_p1_strong: "TempMail Pro", article_p1: "é um serviço de e-mail descartável para proteger sua identidade.", feat1_h4: "Auto-Destruição 5 Min", feat1_p: "E-mails sensíveis são excluídos em 5 min.", feat2_h4: "Extrator de OTP", feat2_p: "Copie códigos OTP com 1 clique.", feat3_h4: "Dual Engine API", feat3_p: "Servidores duplos com seleção de domínio.", feat4_h4: "Modo Escuro Premium", feat4_p: "Design luxuoso em Glassmorphism.", foot_about: "Sobre nós", foot_contact: "Contato", foot_privacy: "Privacidade", foot_terms: "Termos", foot_rights: "Todos os direitos reservados", detected_otp: "OTP Detectado:", btn_copy_otp: "📋 Copiar OTP", modal_del_title: "⚠️ Excluir permanentemente?", modal_del_desc: "Isso excluirá sua conta e mensagens.", btn_cancel: "Cancelar", btn_yes_delete: "Sim, Excluir", modal_dom_title: "Escolher Domínio", modal_dom_desc: "Escolha uma extensão de domínio:", toast_copy_mail: "✅ E-mail copiado!", toast_copy_otp: "🔐 OTP copiado!", toast_del_done: "🗑️ E-mail excluído!", toast_destruct: "💥 E-mail destruído.", refresh_in: "Atualiza em {n}s", pause_refresh: "Pausado...", loading_msg: "Carregando...", empty_msg: "E-mail vazio.", warn_sens: "Aviso: E-mail sensível.", warn_otp: "Aviso: Nunca compartilhe seu OTP.", warn_imp: "Aviso: Informação importante.", lbl_sens: "Sensível", lbl_otp: "OTP", lbl_imp: "Importante", no_subject: "(Sem assunto)", from: "De:", time_burn: "Expira em:", time_del: "💥 Excluindo..." },
+            hi: { tagline: "स्पैम से बचने के लिए मुफ्त अस्थायी ईमेल।", btn_copy: "कॉपी", btn_delete: "🗑️ हटाएं और बदलें", status_active: "ईमेल सक्रिय", status_connecting: "कनेक्ट हो रहा है...", inbox_title: "इनबॉक्स", btn_refresh: "रिफ्रेश", empty_inbox: "इनबॉक्स खाली है। ईमेल की प्रतीक्षा कर रहा है...", article_h2: "TempMail Pro क्या है?", article_p1_strong: "TempMail Pro", article_p1: "एक डिस्पोजेबल ईमेल सेवा है जो आपकी पहचान की रक्षा करती है।", feat1_h4: "5-मिनट ऑटो-डिस्ट्रक्ट", feat1_p: "संवेदनशील ईमेल 5 मिनट में हटा दिए जाते हैं।", feat2_h4: "स्मार्ट OTP एक्सट्रैक्टर", feat2_p: "1 क्लिक में OTP कॉपी करें।", feat3_h4: "डुअल इंजन API", feat3_p: "डोमेन चयन के साथ डुअल सर्वर।", feat4_h4: "प्रीमियम डार्क मोड", feat4_p: "शानदार ग्लासमॉर्फिज्म डिजाइन।", foot_about: "हमारे बारे में", foot_contact: "संपर्क", foot_privacy: "गोपनीयता", foot_terms: "शर्तें", foot_rights: "सर्वाधिकार सुरक्षित", detected_otp: "OTP मिला:", btn_copy_otp: "📋 OTP कॉपी", modal_del_title: "⚠️ स्थायी रूप से हटाएं?", modal_del_desc: "यह आपका खाता हटा देगा।", btn_cancel: "रद्द करें", btn_yes_delete: "हां, हटाएं", modal_dom_title: "डोमेन चुनें", modal_dom_desc: "अपना डोमेन एक्सटेंशन चुनें:", toast_copy_mail: "✅ ईमेल कॉपी किया गया!", toast_copy_otp: "🔐 OTP कॉपी किया गया!", toast_del_done: "🗑️ ईमेल हटा दिया गया!", toast_destruct: "💥 ईमेल नष्ट हो गया।", refresh_in: "{n}s में रिफ्रेश", pause_refresh: "रोक दिया...", loading_msg: "लोड हो रहा है...", empty_msg: "खाली ईमेल।", warn_sens: "चेतावनी: संवेदनशील ईमेल।", warn_otp: "चेतावनी: OTP साझा न करें।", warn_imp: "चेतावनी: जानकारी सुरक्षित रखें।", lbl_sens: "संवेदनशील", lbl_otp: "OTP", lbl_imp: "महत्वपूर्ण", no_subject: "(कोई विषय नहीं)", from: "से:", time_burn: "नष्ट:", time_del: "💥 हटा रहा है..." },
+            it: { tagline: "Email temporanea gratuita contro lo spam.", btn_copy: "Copia", btn_delete: "🗑️ Elimina e Sostituisci", status_active: "Email attiva", status_connecting: "Connessione...", inbox_title: "Posta in arrivo", btn_refresh: "Aggiorna", empty_inbox: "Casella vuota. In attesa di email...", article_h2: "Cos'è TempMail Pro?", article_p1_strong: "TempMail Pro", article_p1: "è un servizio email usa e getta per proteggere la tua identità.", feat1_h4: "Auto-Distruzione 5 Min", feat1_p: "Le email sensibili vengono eliminate in 5 min.", feat2_h4: "Estrattore OTP", feat2_p: "Copia i codici OTP con 1 clic.", feat3_h4: "Dual Engine API", feat3_p: "Doppi server con selezione dominio.", feat4_h4: "Modalità Scura Premium", feat4_p: "Lussuoso design Glassmorphism.", foot_about: "Chi Siamo", foot_contact: "Contatti", foot_privacy: "Privacy", foot_terms: "Termini", foot_rights: "Tutti i diritti riservati", detected_otp: "OTP Rilevato:", btn_copy_otp: "📋 Copia OTP", modal_del_title: "⚠️ Eliminare definitivamente?", modal_del_desc: "Questo eliminerà account e messaggi.", btn_cancel: "Annulla", btn_yes_delete: "Sì, Elimina", modal_dom_title: "Scegli Dominio", modal_dom_desc: "Scegli un'estensione di dominio:", toast_copy_mail: "✅ Email copiata!", toast_copy_otp: "🔐 OTP copiato!", toast_del_done: "🗑️ Email eliminata!", toast_destruct: "💥 Email auto-distrutta.", refresh_in: "Aggiorna in {n}s", pause_refresh: "In pausa...", loading_msg: "Caricamento...", empty_msg: "Email vuota.", warn_sens: "Avviso: Email sensibile.", warn_otp: "Avviso: Non condividere OTP.", warn_imp: "Avviso: Info importante.", lbl_sens: "Sensibile", lbl_otp: "OTP", lbl_imp: "Importante", no_subject: "(Nessun oggetto)", from: "Da:", time_burn: "Scade tra:", time_del: "💥 Eliminazione..." },
+            tr: { tagline: "Spamdan kaçınmak için ücretsiz geçici e-posta.", btn_copy: "Kopyala", btn_delete: "🗑️ Sil ve Değiştir", status_active: "E-posta aktif", status_connecting: "Bağlanıyor...", inbox_title: "Gelen Kutusu", btn_refresh: "Yenile", empty_inbox: "Kutu boş. E-posta bekleniyor...", article_h2: "TempMail Pro nedir?", article_p1_strong: "TempMail Pro", article_p1: "kimliğinizi koruyan tek kullanımlık bir e-posta hizmetidir.", feat1_h4: "5 Dk Otomatik İmha", feat1_p: "Hassas e-postalar 5 dk içinde silinir.", feat2_h4: "Akıllı OTP Çıkarıcı", feat2_p: "OTP kodlarını 1 tıklamayla kopyalayın.", feat3_h4: "Çift Motor API", feat3_p: "Alan adı seçimi ile çift sunucu.", feat4_h4: "Premium Karanlık Mod", feat4_p: "Şeffaf lüks tasarım (Glassmorphism).", foot_about: "Hakkımızda", foot_contact: "İletişim", foot_privacy: "Gizlilik", foot_terms: "Şartlar", foot_rights: "Tüm Hakları Saklıdır", detected_otp: "OTP Tespit Edildi:", btn_copy_otp: "📋 OTP Kopyala", modal_del_title: "⚠️ Kalıcı olarak silinsin mi?", modal_del_desc: "Hesabınızı ve mesajlarınızı silecektir.", btn_cancel: "İptal", btn_yes_delete: "Evet, Sil", modal_dom_title: "Alan Adı Seçin", modal_dom_desc: "Bir alan adı uzantısı seçin:", toast_copy_mail: "✅ E-posta kopyalandı!", toast_copy_otp: "🔐 OTP kopyalandı!", toast_del_done: "🗑️ E-posta silindi!", toast_destruct: "💥 E-posta imha edildi.", refresh_in: "{n}s içinde yenile", pause_refresh: "Duraklatıldı...", loading_msg: "Yükleniyor...", empty_msg: "Boş e-posta.", warn_sens: "Uyarı: Hassas e-posta.", warn_otp: "Uyarı: OTP'yi paylaşmayın.", warn_imp: "Uyarı: Önemli bilgi.", lbl_sens: "Hassas", lbl_otp: "OTP", lbl_imp: "Önemli", no_subject: "(Konu yok)", from: "Kimden:", time_burn: "İmha süresi:", time_del: "💥 Siliniyor..." }
+        };
+
+        // === LANGUAGE ENGINE ===
+        let currentLang = localStorage.getItem('lang') || 'id';
+
+        function changeLang(lang) {
+            currentLang = lang; localStorage.setItem('lang', lang);
+            
+            if(lang === 'ar') document.body.setAttribute('dir', 'rtl');
+            else document.body.setAttribute('dir', 'ltr');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang] && i18n[currentLang][key]) {
+                    if (el.tagName === 'SPAN' && el.parentElement.tagName === 'BUTTON') {
+                        el.innerHTML = el.innerHTML.replace(/[^<]*/, i18n[currentLang][key]); 
+                    } else {
+                        el.innerHTML = i18n[currentLang][key];
+                    }
+                }
+            });
+
+            document.getElementById('status-text').innerText = i18n[currentLang].status_active;
+            const inboxList = document.getElementById('inbox-list');
+            if(inboxList.innerHTML.includes('empty-icon')) {
+                inboxList.innerHTML = `<div class="empty-state"><div class="empty-icon">📥</div><p data-i18n="empty_inbox">${i18n[currentLang].empty_inbox}</p></div>`;
+            }
+
+            updateLangButtons(); closeLangModal(); fetchMessages(false, true);
+        }
+
+        function t(key) { return (i18n[currentLang] && i18n[currentLang][key]) ? i18n[currentLang][key] : i18n['id'][key]; }
+        function showLangModal() { document.getElementById('lang-modal').classList.add('show'); updateLangButtons(); }
+        function closeLangModal() { document.getElementById('lang-modal').classList.remove('show'); }
+        function updateLangButtons() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick').includes(`'${currentLang}'`)) btn.classList.add('active');
+            });
+        }
+
+        // === DARK MODE ENGINE ===
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const rootElement = document.documentElement;
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            rootElement.setAttribute('data-theme', 'dark');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (rootElement.getAttribute('data-theme') === 'dark') {
+                rootElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light');
+            } else {
+                rootElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        const API_MAILTM = 'https://api.mail.tm'; const API_MAILGW = 'https://api.mail.gw';
+        let account = null; let refreshTimer = null; let countdown = 5; let currentExtractedOTP = ""; let openMessageId = null; let autoDestructEngine = null;
+
+        const kwSensitive = ['password', 'pass', 'reset', 'sandi', 'kredensial', 'credential'];
+        const kwOtp = ['otp', 'verification', 'verify', 'verifikasi', 'code', 'kode', 'token', 'pin'];
+        const kwImportant = ['login', 'bank', 'bca', 'mandiri', 'bni', 'bri', 'paypal', 'wallet', 'crypto', 'binance', 'facebook', 'instagram', 'security', 'keamanan', 'alert'];
+
+        function classifyEmail(subject, senderName, senderAddress) {
+            const textToScan = `${subject} ${senderName} ${senderAddress}`.toLowerCase();
+            if (kwSensitive.some(k => textToScan.includes(k))) return { type: 'sensitive', label: t('lbl_sens'), class: 'row-sensitive', badgeClass: 'badge-sensitive', warning: t('warn_sens'), bgWarn: 'var(--bg-sensitive)', colWarn: 'var(--text-sensitive)' };
+            if (kwOtp.some(k => textToScan.includes(k))) return { type: 'otp', label: t('lbl_otp'), class: 'row-otp', badgeClass: 'badge-otp', warning: t('warn_otp'), bgWarn: 'var(--bg-otp)', colWarn: 'var(--text-otp)' };
+            if (kwImportant.some(k => textToScan.includes(k))) return { type: 'important', label: t('lbl_imp'), class: 'row-important', badgeClass: 'badge-important', warning: t('warn_imp'), bgWarn: 'var(--bg-important)', colWarn: 'var(--text-important)' };
+            return { type: 'normal', label: '', class: '', badgeClass: '', warning: '', bgWarn: '', colWarn: '' };
+        }
+
+        function extractOTP(text) { if (!text) return null; const match = text.match(/\b\d{4,8}\b/); return match ? match[0] : null; }
+        function getBaseUrl(provider) { return provider === 'mail.gw' ? API_MAILGW : API_MAILTM; }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            changeLang(currentLang); 
+            loadOrCreateAccount();
+            window.addEventListener('scroll', () => { const scrollBtn = document.getElementById('scrollTopBtn'); if (window.scrollY > 300) scrollBtn.classList.add('visible'); else scrollBtn.classList.remove('visible'); });
+            autoDestructEngine = setInterval(updateAutoDestructTimers, 1000);
+        });
+
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+        async function loadOrCreateAccount() {
+            setLoadingState(true); const savedData = localStorage.getItem('tempmail_session');
+            if (savedData) {
+                try {
+                    account = JSON.parse(savedData); if (!account.provider) account.provider = 'mail.tm';
+                    const res = await fetch(`${getBaseUrl(account.provider)}/me`, { headers: { 'Authorization': `Bearer ${account.token}` } });
+                    if (res.ok) { setupUI(); return; }
+                } catch (e) { console.log('Sesi kedaluwarsa...'); }
+            }
+            startAccountGeneration(false);
+        }
+
+        async function startAccountGeneration(isManualRequest) {
+            setLoadingState(true); stopAutoRefresh();
+            try {
+                let lastUsed = localStorage.getItem('last_provider') || 'mail.gw'; let nextProvider = (lastUsed === 'mail.tm') ? 'mail.gw' : 'mail.tm'; localStorage.setItem('last_provider', nextProvider);
+                const baseUrl = getBaseUrl(nextProvider); const domainRes = await fetch(`${baseUrl}/domains`); const domainData = await domainRes.json(); const availableDomains = domainData['hydra:member'];
+                if (isManualRequest && availableDomains.length > 1) { showDomainSelectionModal(availableDomains, nextProvider); } else { createAccountWithDomain(availableDomains[0].domain, nextProvider); }
+            } catch (error) { document.getElementById('email-address').value = t('server_busy'); document.getElementById('system-status').style.display = 'none'; }
+        }
+
+        function showDomainSelectionModal(domainsList, providerName) {
+            const modal = document.getElementById('domain-modal'); const listContainer = document.getElementById('domain-list');
+            document.getElementById('dm-provider-name').innerText = providerName === 'mail.gw' ? 'Mail.gw' : 'Mail.tm'; listContainer.innerHTML = ''; 
+            domainsList.forEach(item => {
+                const btn = document.createElement('button'); btn.className = 'domain-btn'; btn.innerHTML = `<span style="direction:ltr">@${item.domain}</span> <span class="domain-btn-icon">➔</span>`;
+                btn.onclick = () => { modal.classList.remove('show'); createAccountWithDomain(item.domain, providerName); }; listContainer.appendChild(btn);
+            });
+            modal.classList.add('show');
+        }
+
+        async function createAccountWithDomain(selectedDomain, provider) {
+            setLoadingState(true); const baseUrl = getBaseUrl(provider); const username = Math.random().toString(36).substring(2, 12); const password = Math.random().toString(36).substring(2, 15) + '!A1'; const address = `${username}@${selectedDomain}`;
+            try {
+                await fetch(`${baseUrl}/accounts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, password }) });
+                const tokenRes = await fetch(`${baseUrl}/token`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, password }) });
+                const tokenData = await tokenRes.json(); account = { provider: provider, address, password, token: tokenData.token };
+                localStorage.setItem('tempmail_session', JSON.stringify(account)); setupUI(); showToast("✨ " + t('toast_del_done'));
+            } catch (error) { document.getElementById('email-address').value = t('fail_create'); }
+        }
+
+        function setupUI() {
+            document.getElementById('email-address').value = account.address; document.getElementById('system-status').style.display = 'inline-flex';
+            document.getElementById('provider-label').innerText = `API: ${account.provider === 'mail.gw' ? 'Mail.gw' : 'Mail.tm'}`; setLoadingState(false);
+            document.getElementById('inbox-list').innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p data-i18n="empty_inbox">${t('empty_inbox')}</p></div>`;
+            fetchMessages(); startAutoRefresh();
+        }
+
+        function startAutoRefresh() {
+            if (refreshTimer) clearInterval(refreshTimer); countdown = 5;
+            refreshTimer = setInterval(() => {
+                countdown--; document.getElementById('countdown-text').innerText = t('refresh_in').replace('{n}', countdown);
+                if (countdown <= 0) { fetchMessages(); countdown = 5; }
+            }, 1000);
+        }
+
+        function stopAutoRefresh() { if (refreshTimer) clearInterval(refreshTimer); document.getElementById('countdown-text').innerText = t('pause_refresh'); }
+
+        async function fetchMessages(isManual = false, isLangUpdate = false) {
+            if (!account || !account.token) return;
+            const indicator = document.getElementById('refresh-indicator'); if(!isLangUpdate) indicator.style.display = 'inline-block';
+            try {
+                const res = await fetch(`${getBaseUrl(account.provider)}/messages`, { headers: { 'Authorization': `Bearer ${account.token}` } });
+                const data = await res.json(); renderInbox(data['hydra:member'] || []);
+            } catch (error) {} 
+            finally { setTimeout(() => indicator.style.display = 'none', 500); if (isManual) { countdown = 5; document.getElementById('countdown-text').innerText = t('refresh_in').replace('{n}', 5); } }
+        }
+
+        function renderInbox(messages) {
+            const container = document.getElementById('inbox-list');
+            if (messages.length === 0) { container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p data-i18n="empty_inbox">${t('empty_inbox')}</p></div>`; return; }
+            container.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const subjectText = msg.subject || t('no_subject'); const senderName = msg.from.name || ''; const senderAddress = msg.from.address;
+                const category = classifyEmail(subjectText, senderName, senderAddress);
+                const item = document.createElement('div'); item.className = `message-item ${category.class}`; item.id = `msg-row-${msg.id}`; 
+                
+                let badgeHTML = ''; let autoDestructHTML = '';
+                if (category.type !== 'normal') {
+                    let icon = category.type === 'sensitive' ? '⚠️ ' : (category.type === 'otp' ? '🔐 ' : '🔔 ');
+                    badgeHTML = `<span class="badge ${category.badgeClass}">${icon}${category.label}</span>`;
+                    if (category.type === 'sensitive' || category.type === 'otp') {
+                        const expireTime = new Date(msg.createdAt).getTime() + (5 * 60 * 1000);
+                        autoDestructHTML = `<div class="auto-destruct-timer timer-item" data-expire="${expireTime}" data-id="${msg.id}">⏳ ...</div>`;
+                    }
+                }
+                
+                item.onclick = () => readMessage(msg.id, category, msg, autoDestructHTML !== ''); 
+                item.innerHTML = `
+                    <div class="msg-sender" style="direction:ltr;text-align:${currentLang==='ar'?'right':'left'}">${senderName ? senderName + ' ' : ''}<span style="opacity:0.7">&lt;${senderAddress}&gt;</span></div>
+                    <div class="msg-subject" style="direction:${currentLang==='ar'?'rtl':'ltr'}">${badgeHTML}${subjectText}</div>
+                    <div class="msg-time-wrapper">
+                        <div class="msg-time">${time}</div>
+                        ${autoDestructHTML}
+                    </div>`;
+                container.appendChild(item);
+            });
+        }
+
+        async function readMessage(id, category, msgObj, hasDestructTimer) {
+            stopAutoRefresh(); openMessageId = id; 
+            const modal = document.getElementById('email-modal'); const iframe = document.getElementById('email-content');
+            const warningBanner = document.getElementById('smart-warning'); const otpExtractor = document.getElementById('otp-extractor'); const modalTimer = document.getElementById('modal-auto-destruct');
+            
+            if (category.type !== 'normal') {
+                warningBanner.style.backgroundColor = category.bgWarn; warningBanner.style.color = category.colWarn;
+                document.getElementById('smart-warning-text').innerHTML = `<b>Peringatan:</b> ${category.warning}`; warningBanner.classList.add('show');
+                if (hasDestructTimer) { const expireTime = new Date(msgObj.createdAt).getTime() + (5 * 60 * 1000); modalTimer.setAttribute('data-expire', expireTime); modalTimer.setAttribute('data-id', id); modalTimer.classList.add('timer-item'); modalTimer.style.display = 'flex'; } 
+                else { modalTimer.style.display = 'none'; modalTimer.classList.remove('timer-item'); }
+            } else { warningBanner.classList.remove('show'); modalTimer.style.display = 'none'; modalTimer.classList.remove('timer-item'); }
+
+            otpExtractor.classList.remove('show'); currentExtractedOTP = "";
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark'; const loadingColor = isDark ? '#9CA3AF' : '#6b7280'; 
+            document.getElementById('modal-subject').innerText = t('loading_msg'); document.getElementById('modal-sender').innerText = "";
+            iframe.srcdoc = `<div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; color:${loadingColor};">${t('loading_msg')}</div>`;
+            modal.classList.add('show');
+
+            try {
+                const res = await fetch(`${getBaseUrl(account.provider)}/messages/${id}`, { headers: { 'Authorization': `Bearer ${account.token}` } });
+                const msg = await res.json(); const subjectText = msg.subject || t('no_subject'); let badgeHTML = '';
+                if (category.type !== 'normal') {
+                    let icon = category.type === 'sensitive' ? '⚠️ ' : (category.type === 'otp' ? '🔐 ' : '🔔 ');
+                    badgeHTML = `<span class="badge ${category.badgeClass}" style="margin-right: 12px; font-size: 0.85rem;">${icon}${category.label}</span>`;
+                }
+                document.getElementById('modal-subject').innerHTML = `${badgeHTML}${subjectText}`;
+                document.getElementById('modal-sender').innerHTML = `<span style="direction:ltr">${t('from')} ${msg.from.name ? msg.from.name + ' ' : ''}&lt;${msg.from.address}&gt;</span>`;
+                
+                let foundOTP = extractOTP(subjectText) || extractOTP(msg.intro) || extractOTP(msg.text?.substring(0, 500));
+                if (foundOTP) { currentExtractedOTP = foundOTP; document.getElementById('detected-otp').innerText = foundOTP; otpExtractor.classList.add('show'); }
+                
+                let content = msg.html && msg.html.length > 0 ? msg.html[0] : '';
+                const textColor = isDark ? '#E5E7EB' : '#111827'; 
+                if (!content) { content = `<pre style="padding:20px; font-family:sans-serif; white-space:pre-wrap; color:${textColor};">${msg.text || t('empty_msg')}</pre>`; }
+                
+                // Set warna dasar putih jika isi email HTML untuk mencegah teks hitam tidak terbaca di dark mode
+                const bgColor = (msg.html && msg.html.length > 0) ? '#FFFFFF' : (isDark ? 'transparent' : '#FFFFFF');
+                const overrideText = (msg.html && msg.html.length > 0) ? '' : `color:${textColor};`;
+                
+                content = `<style>body{${overrideText} background-color:${bgColor}; direction:${currentLang==='ar'?'rtl':'ltr'}</style>` + content;
+                iframe.srcdoc = content;
+            } catch (error) { iframe.srcdoc = `<div style="padding:20px; font-family:sans-serif; color:red;">${t('failed_msg')}</div>`; }
+        }
+
+        function closeModal() {
+            document.getElementById('email-modal').classList.remove('show'); document.getElementById('email-content').srcdoc = '';
+            document.getElementById('smart-warning').classList.remove('show'); document.getElementById('otp-extractor').classList.remove('show');
+            document.getElementById('modal-auto-destruct').classList.remove('timer-item'); openMessageId = null; startAutoRefresh(); 
+        }
+
+        function updateAutoDestructTimers() {
+            const timers = document.querySelectorAll('.timer-item'); const now = new Date().getTime();
+            timers.forEach(timer => {
+                const expireTime = parseInt(timer.getAttribute('data-expire')); const msgId = timer.getAttribute('data-id'); const diff = expireTime - now;
+                if (diff <= 0) {
+                    timer.innerHTML = t('time_del'); timer.classList.remove('timer-item'); executeAutoDelete(msgId);
+                } else {
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    timer.innerHTML = `⏳ ${t('time_burn')} 0${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+                    if (minutes === 0) timer.classList.add('timer-critical');
+                }
+            });
+        }
+
+        async function executeAutoDelete(msgId) {
+            if (!account || !account.token) return;
+            try {
+                await fetch(`${getBaseUrl(account.provider)}/messages/${msgId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${account.token}` } });
+                if (openMessageId === msgId) { closeModal(); showToast(t('toast_destruct')); } else { showToast(t('toast_clean')); }
+                fetchMessages(true);
+            } catch (e) {}
+        }
+
+        function copyExtractedOTP() {
+            if (!currentExtractedOTP) return;
+            const textArea = document.createElement("textarea"); textArea.value = currentExtractedOTP; document.body.appendChild(textArea); textArea.select();
+            try { document.execCommand('copy'); showToast(t('toast_copy_otp')); } catch (err) {} document.body.removeChild(textArea);
+        }
+
+        function copyEmail() {
+            const emailInput = document.getElementById('email-address');
+            if (emailInput.value && emailInput.value.includes('@')) {
+                const textArea = document.createElement("textarea"); textArea.value = emailInput.value; document.body.appendChild(textArea); textArea.select();
+                try { document.execCommand('copy'); showToast(t('toast_copy_mail')); } catch (err) {} document.body.removeChild(textArea);
+            }
+        }
+
+        function showToast(message) { const toast = document.getElementById('toast'); toast.innerText = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
+        function setLoadingState(isLoading) { const input = document.getElementById('email-address'); if (isLoading) { input.value = "Menyiapkan server email..."; document.getElementById('system-status').style.display = 'none'; } }
+        function showConfirmModal() { document.getElementById('confirm-modal').classList.add('show'); }
+        function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('show'); }
+
+        async function executeDeleteAccount() {
+            closeConfirmModal(); setLoadingState(true); stopAutoRefresh();
+            try {
+                const meRes = await fetch(`${getBaseUrl(account.provider)}/me`, { headers: { 'Authorization': `Bearer ${account.token}` } });
+                if (meRes.ok) { const meData = await meRes.json(); await fetch(`${getBaseUrl(account.provider)}/accounts/${meData.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${account.token}` } }); }
+            } catch (error) {}
+            localStorage.removeItem('tempmail_session'); startAccountGeneration(true); 
+        }
+    </script>
+</body>
+</html>
